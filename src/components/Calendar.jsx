@@ -12,12 +12,18 @@ export function Calendar() {
 
     const yearNum = Number(year);
     const monthId = Number(month);
+    const dayNum = Number(day);
+
+    const today = new Date();
     
     useEffect(() => {
-        if (Number.isNaN(monthId)) {
+        if (Number.isNaN(yearNum) || yearNum < 1900 || yearNum > 2099) {
+            navigate(`/calendar/${today.getFullYear()}/${today.getMonth()+1}`);
+        }
+        if (Number.isNaN(monthId) || monthId < 1 || monthId > 12) {
             navigate(`/calendar/${yearNum}/${1}`);
         }
-    }, [monthId, navigate])
+    }, [dayNum, monthId, yearNum, navigate])
 
     const reduceMonth = (event) => {
         if (monthId === 1) {

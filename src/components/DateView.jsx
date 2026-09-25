@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Month } from "./Month";
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Textbox } from './Textbox';
+import { NotesView } from './NotesView';
 
 export function DateView() {
 
@@ -14,6 +14,8 @@ export function DateView() {
     const yearNum = Number(year);
     const monthId = Number(month);
     const dayNum = Number(day);
+
+    const [notes, updateNotes] = useState([])
     
     useEffect(() => {
         if (Number.isNaN(yearNum) || yearNum < 1) {
@@ -25,7 +27,30 @@ export function DateView() {
         if (Number.isNaN(dayNum) || dayNum < 1 || dayNum > daysInMonths[monthId-1]) {
             navigate(`/calendar/${yearNum}/${monthId}`);
         }
-    }, [monthId, dayNum, navigate])
+
+        getNotes();
+
+    }, [])
+
+    const getNotes = async () => {
+        const url = `http://localhost:3001/api/notes/list?year=${year}&month=${month}&day=${day}`;
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            updateNotes(result);
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
 
     const formatDay = (day) => {
         if (day === 1 || day === 21 || day == 31) {
@@ -53,8 +78,10 @@ export function DateView() {
                     <h2 style={{ margin: '0 auto' }}>{months[monthId-1]} {formatDay(dayNum)}, {yearNum}</h2>
                     <div style={{visibility: "hidden", marginLeft: "10px"}}><p>Return</p></div>
                 </div>
-                <Textbox />
-
+                <div style={{display:"flex", flexDirection:"column", gap:"30px"}}>
+                    <Textbox year={yearNum} month={monthId} day={dayNum}/>
+                    <NotesView notesText={notes}/>
+                </div>
             </div>
         </>
     )

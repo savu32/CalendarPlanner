@@ -15,18 +15,20 @@ export function DateButton({ day }) {
     }
 
     return (
-        <button style={{flex: '0, 0, 100px', height : "100px", width:"80px",
-                        backgroundColor : "white", borderColor:"black", borderWidth:"2px",
-                        borderWidth:"4", display: 'flex',
-                        alignItems: 'flex-start',      
-                        justifyContent: 'flex-start',
-                        textAlign: 'left', 
-                        }}
-                onClick = {() => openDateView(year, month, day)}
-                disabled = {day === undefined}>
-            <p style={{color : "black"}}>
-                {day}
-            </p>
-        </button>
+        <>
+            <button style={{flex: '0, 0, 100px', height : "100px", width:"80px",
+                            backgroundColor : "white", borderColor:"black", borderWidth:"2px",
+                            borderWidth:"4", display: 'flex',
+                            alignItems: 'flex-start',      
+                            justifyContent: 'flex-start',
+                            textAlign: 'left', 
+                            }}
+                    onClick = {() => openDateView(year, month, day)}
+                    disabled = {day === undefined}>
+                <p style={{color : "black"}}>
+                    {day}
+                </p>
+            </button>
+        </>
     )
 }

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 export function Calendar() {
 
+    //, border: '2px dashed #3498db'
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
@@ -52,11 +53,13 @@ export function Calendar() {
 
     return (
         <>
-            <div>
-                <div style = {{display : "flex", justifyContent : "center", gap : "10px"}}>
-                    <button onClick={reduceMonth} style={{backgroundColor : "black", borderWidth:"0"}}>{"<"}</button>
-                    <h2 style={{width : "160px"}}>{months[monthId-1]} {yearNum}</h2>
-                    <button onClick={increaseMonth} style={{backgroundColor : "black", borderWidth:"0"}}>{">"}</button>
+            <div style = {{display:"flex", flexDirection:"column", gap:"2px"}}>
+                <div style = {{display : "flex", flexDirection:"row", alignItems:"center", gap : "10px", padding:"5px"}}>
+                    <button disabled = {true} style={{ visibility: "hidden", justifySelf:"flex-start", alignSelf:"center"}}>Log in</button>
+                    <button onClick={reduceMonth} style={{backgroundColor : "black", marginLeft:"auto", borderWidth:"0"}}>{"<"}</button>
+                    <h2 style={{width : "160px",  alignSelf:"center"}}>{months[monthId-1]} {yearNum}</h2>
+                    <button onClick={increaseMonth} style={{backgroundColor : "black", marginRight:"auto", borderWidth:"0"}}>{">"}</button>
+                    <button style={{justifySelf:"flex-end"}}>Log in</button>
                 </div>
                 <Month daysInMonth={getDaysInMonth(monthId-1)} />
             </div>

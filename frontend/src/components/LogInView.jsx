@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from "./AuthProvider";
 
 export function LogInView() {
+
+    const { login } = useAuth()
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -20,7 +23,7 @@ export function LogInView() {
     }
 
     const sendLoginRequest = () => {
-
+        login(username, password);
 
         setUsername("")
         setPassword("")

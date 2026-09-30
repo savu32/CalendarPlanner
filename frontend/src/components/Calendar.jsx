@@ -1,8 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Month } from "./Month";
 import { useEffect } from 'react';
+import { useAuth } from "./AuthProvider";
 
 export function Calendar() {
+
+    const { username, login, logout } = useAuth();
 
     //, border: '2px dashed #3498db'
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -59,7 +62,10 @@ export function Calendar() {
                     <button onClick={reduceMonth} style={{backgroundColor : "black", marginLeft:"auto", borderWidth:"0"}}>{"<"}</button>
                     <h2 style={{width : "160px",  alignSelf:"center"}}>{months[monthId-1]} {yearNum}</h2>
                     <button onClick={increaseMonth} style={{backgroundColor : "black", marginRight:"auto", borderWidth:"0"}}>{">"}</button>
-                    <button style={{justifySelf:"flex-end"}}>Log in</button>
+                    { username === null ? 
+                        <button style={{justifySelf:"flex-end"}}>Log in</button> 
+                        : 
+                        <p>{username}</p> }
                 </div>
                 <Month daysInMonth={getDaysInMonth(monthId-1)} />
             </div>

@@ -120,9 +120,15 @@ app.post('/api/signup', async (req, res) => {
 
 app.get('/api/me', async (req, res) => {
     const verifiedData = await parseToken(req.headers);
-    console.log(verifiedData);
     if (verifiedData !== undefined && verifiedData.user_id !== undefined) {
-        res.status(200).json({"response": "verified user"});
+        const usernameQuery = "SELECT username FROM users WHERE user_id = $1";
+        const usernameRow = await query(usernameQuery, [verifiedData.user_id]);
+        if (usernameRow !== undefined) {
+            const username = usernameRow.rows[0].username
+            res.status(200).json({"response": `username: ${username}`});
+        } else {
+            res.status(200).json({"response": "invalid token"});
+        }
     } else {
         res.status(200).json({"response": "not logged in"});
     }

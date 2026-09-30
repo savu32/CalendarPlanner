@@ -34,23 +34,23 @@ export function DateView() {
 
     const getNotes = async () => {
         const url = `http://localhost:3001/api/notes/list?year=${year}&month=${month}&day=${day}`;
-        try {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    // "headers": { Authorization: `Bearer ${token}` }
-                },
-            });
-            if (!response.ok) {
-                throw new Error(`Response status: ${response.status}`);
-            }
+        // try {
+        //     const response = await fetch(url, {
+        //         method: "GET",
+        //         headers: {
+        //             "Content-Type": "application/json",
+        //             // "headers": { Authorization: `Bearer ${token}` }
+        //         },
+        //     });
+        //     if (!response.ok) {
+        //         throw new Error(`Response status: ${response.status}`);
+        //     }
 
-            const result = await response.json();
-            updateNotes(result);
-        } catch (error) {
-            console.error(error.message);
-        }
+        //     const result = await response.json();
+        //     updateNotes(result);
+        // } catch (error) {
+        //     console.error(error.message);
+        // }
     }
 
     const formatDay = (day) => {

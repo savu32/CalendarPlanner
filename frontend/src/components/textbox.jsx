@@ -1,33 +1,26 @@
 import { useState } from "react";
+import { useAuth } from "./AuthProvider";
 // import styles from '../styles/textbox.module.css';
-export function Textbox({year, month, day}) {
 
+export const Textbox = ({year, month, day}) => {
+
+    const { apiFetch } = useAuth();
     const [textField, handleChange] = useState("");
 
     const createNote = async () => {
         const url = "http://localhost:3001/api/notes/create";
-        try {
-            const response = await fetch(url, {
+        const options = {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     "year": year,
                     "month": month,
                     "day": day,
                     "note": textField
                 })
-            });
-            if (!response.ok) {
-                throw new Error(`Response status: ${response.status}`);
             }
-
-            const result = await response.json();
-            console.log(result);
-        } catch (error) {
-            console.error(error.message);
-        }
+        const result = await apiFetch(url, options);
+        console.log(await result.json())
 
         handleChange("");
     }

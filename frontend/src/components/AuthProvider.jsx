@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const AuthContext = createContext(null);
 
@@ -38,32 +38,47 @@ export function AuthProvider({ children }) {
         fetchResponse();
     }, [])
 
-    async function login(username, password) {
+    const login = async (username, password) => {
         const url = "http://localhost:3001/api/login"
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ "username": username, "password": password }),
         });
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
         const result = await response.json();
-        console.log(result.response);
-  }
+        const resultResponse = result.response.split(" ");
+        console.log(resultResponse)
+        setUsername(resultResponse[0]);
+        setToken(resultResponse[1]);
+    }
 
-  async function logout() {
-    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-    setUser(null);
-  }
+    const logout = async () => {
+        // await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+        setUsername(null);
+        setToken(null);
+    }
 
-  return (
-    <AuthContext.Provider value={{ username, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    const apiFetch = useCallback(async (url, options = {}) => {
+        const res = await fetch(url, {
+            ...options,
+            headers: { ...options.headers, Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 401) { 
+            setUsername(null);
+            setToken(null);
+        }
+        return res;
+
+    }, [token]);
+
+    return (
+        <AuthContext.Provider value={{ username, loading, login, logout, apiFetch }}>
+        {children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {

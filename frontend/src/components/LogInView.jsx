@@ -29,6 +29,10 @@ export function LogInView() {
         setPassword("")
     }
 
+    const goBack = () => {
+        navigate(`/calendar/`);
+    }
+
     return (
         <>
             <div style = {{display : "flex", 
@@ -40,6 +44,9 @@ export function LogInView() {
                             textAlign:"center",
                             gap:"10px"
                             }}>
+                <button onClick={() => goBack()}>
+                    <p>Return</p>
+                </button>
                 <div style={{margin:"0 auto"}}>
                     <input
                         type="text"

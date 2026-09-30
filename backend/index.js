@@ -178,7 +178,7 @@ app.post('/api/login', async (req, res) => {
             // const JWT_SECRET = crypto.randomBytes(32).toString('hex');
             // console.log(typeof JWT_SECRET) 
             const token = jwt.sign({ user_id: user_id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-            return res.status(200).json({"response": `logged in: ${content.username}`, "token": token});
+            return res.status(200).json({"response": `${content.username} ${token}`});
         }
     }
     return res.status(400).json({"error": `username or password is incorrect`});

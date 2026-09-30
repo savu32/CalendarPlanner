@@ -54,6 +54,10 @@ export function Calendar() {
         return daysInMonths[monthId];
     }
 
+    const goToLogin = () => {
+        navigate('/calendar/login');
+    }
+
     return (
         <>
             <div style = {{display:"flex", flexDirection:"column", gap:"2px"}}>
@@ -63,7 +67,7 @@ export function Calendar() {
                     <h2 style={{width : "160px",  alignSelf:"center"}}>{months[monthId-1]} {yearNum}</h2>
                     <button onClick={increaseMonth} style={{backgroundColor : "black", marginRight:"auto", borderWidth:"0"}}>{">"}</button>
                     { username === null ? 
-                        <button style={{justifySelf:"flex-end"}}>Log in</button> 
+                        <button onClick={goToLogin} style={{justifySelf:"flex-end"}}>Log in</button> 
                         : 
                         <p>{username}</p> }
                 </div>

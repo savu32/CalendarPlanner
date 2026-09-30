@@ -39,6 +39,7 @@ export function DateView() {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    // "headers": { Authorization: `Bearer ${token}` }
                 },
             });
             if (!response.ok) {

@@ -1,10 +1,12 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAuth } from "./AuthProvider";
 import { Textbox } from './Textbox';
 import { NotesView } from './NotesView';
 
 export function DateView() {
 
+    const { apiFetch } = useAuth();
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const daysInMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
@@ -32,8 +34,35 @@ export function DateView() {
 
     }, [])
 
+    const createNote = async () => {
+        const url = "http://localhost:3001/api/notes/create";
+        const options = {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    "year": year,
+                    "month": month,
+                    "day": day,
+                    "note": textField
+                })
+        };
+        const result = await apiFetch(url, options);
+        console.log(await result.json())
+
+        handleChange("");
+    }
+
     const getNotes = async () => {
         const url = `http://localhost:3001/api/notes/list?year=${year}&month=${month}&day=${day}`;
+        const options = {
+                method: "GET",
+                headers: {"Content-Type": "application/json"},
+        };
+        const result = await apiFetch(url, options);
+        const notesList = await result.json();
+        const allNotes = JSON.parse(notesList["response"]);
+        console.log(allNotes);
+        updateNotes(allNotes);
         // try {
         //     const response = await fetch(url, {
         //         method: "GET",

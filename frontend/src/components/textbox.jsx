@@ -18,7 +18,7 @@ export const Textbox = ({year, month, day}) => {
                     "day": day,
                     "note": textField
                 })
-            }
+        };
         const result = await apiFetch(url, options);
         console.log(await result.json())
 

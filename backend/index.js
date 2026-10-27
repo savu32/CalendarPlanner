@@ -4,8 +4,15 @@ const PORT = process.env.PORT || 3001;
 import express from 'express';
 const app = express();
 import cors from 'cors';
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,    
+    secure: true,            
+}));
 app.use(express.json());
+
+import cookieParser from 'cookie-parser';
+app.use(cookieParser());   // populates req.cookies
 
 import { query } from './db.js';
 import argon2 from 'argon2';
@@ -15,10 +22,10 @@ import crypto from 'crypto';
 
 app.get('/api/notes/list', async (req, res) => {
     const verifiedData = await parseToken(req.headers);
-    if (verifiedData === undefined || verifiedData.user_id === undefined) {
-        return res.status(400).json({"error": "token expired"});
+    if (verifiedData === undefined || verifiedData.userId === undefined) {
+        return res.status(401).json({"error": "token expired"});
     }
-    const user_id = verifiedData.user_id;
+    const user_id = verifiedData.userId;
 
     const content = req.query;
     if (content.year === undefined ||
@@ -27,19 +34,17 @@ app.get('/api/notes/list', async (req, res) => {
               res.status(400).json({"error":"invalid request parameters"});
     }
     // get notes from db
-    console.log(content.year)
-    const notes = await listNotes(user_id, content.year,
+    const notesResponse = await listNotes(user_id, content.year,
                                         content.month, content.day, res);
-    // console.log(notes);
 
-    return notes
+    return notesResponse;
 
-    const notes1 = [
-      { id: 1, content: 'First note' },
-      { id: 2, content: 'Second note' },
-      { id: 3, content: 'First note' },
-      { id: 4, content: 'Second note' },
-    ];
+    // const notes1 = [
+    //   { id: 1, content: 'First note' },
+    //   { id: 2, content: 'Second note' },
+    //   { id: 3, content: 'First note' },
+    //   { id: 4, content: 'Second note' },
+    // ];
     // res.status(200).json(notes);
 });
 
@@ -48,19 +53,21 @@ const listNotes = async (user_id, year, month, day, res) => {
                     user_id = $1 and year = $2 and month = $3 and day = $4";
     try {
         const result = await query(notes, [user_id, year, month, day]);
-        return res.status(200).json({"response": `notes, ${JSON.stringify(result)}`});
+        // console.log("result", result.rows);
+        return res.status(200).json({"response": `${JSON.stringify(result.rows)}`});
     } catch (err) {
-        console.log(err)
         return res.status(400).json({"error": "list notes failed"});
     }
 }
 
 app.post('/api/notes/create', async (req, res) => {
+    console.log('create')
     const verifiedData = await parseToken(req.headers);
-    if (verifiedData === undefined || verifiedData.user_id === undefined) {
-        return res.status(400).json({"error": "token expired"});
+    console.log("req",verifiedData)
+    if (verifiedData === undefined || verifiedData.userId === undefined) {
+        return res.status(401).json({"error": "token expired"});
     }
-    const user_id = verifiedData.user_id;
+    const user_id = verifiedData.userId;
 
     const content = req.body;
     if (user_id === undefined ||
@@ -72,6 +79,7 @@ app.post('/api/notes/create', async (req, res) => {
     }
     const create = await createNote(user_id, content.year, content.month,
                                     content.day, content.note, res);
+    // console.log(content)
     return create;
 });
 
@@ -89,6 +97,7 @@ const createNote = async (user_id, year, month, day, note, res) => {
 
     const insert = "INSERT INTO notes (user_id, year, month, day, content, created_at) \
                                         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
+
     try {
         const insertResult = await query(insert, [user_id, year, month, day, note, new Date()]);
         return res.status(200).json({"response": `note created`});
@@ -97,9 +106,84 @@ const createNote = async (user_id, year, month, day, note, res) => {
     }
 }
 
+const hash = (token) => {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+const REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
+
+const cookieOpts = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/api/auth',          // cookie is only sent to routes under this path
+  maxAge: REFRESH_MS,
+};
+
+const signAccess = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
+}
+
+const issueRefreshToken = async (res, user_id) => {
+    const create = "CREATE TABLE IF NOT EXISTS refresh_tokens ( \
+                        key_id SERIAL PRIMARY KEY, \
+                        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, \
+                        token_hash TEXT NOT NULL UNIQUE, \
+                        used_at TIMESTAMPTZ, \
+                        expires_at DATE NOT NULL \
+                    )"
+    const createResult = await query(create, [])
+
+    const insert = "INSERT INTO refresh_tokens (user_id, token_hash, expires_at) \
+                                        VALUES ($1, $2, $3) RETURNING *";
+    const token = crypto.randomBytes(48).toString('hex');
+    try {
+        console.log("HASH", hash(token))
+        const insertResult = await query(insert, [user_id, hash(token), new Date(Date.now() + REFRESH_MS)]);
+        res.cookie('refreshToken', token, cookieOpts);   // Set-Cookie header
+    } catch (err) {
+        res.status(400).json({"error": `refresh token issue failed ${err}`});
+    }
+}
+
+app.post('/api/auth/refresh', async (req, res) => {
+    console.log("cookies", req.cookies)
+    const token = req.cookies.refreshToken;
+    if (!token) return res.status(401).json({ error: 'No refresh token' });
+
+    // const result = await query(
+    //     'DELETE FROM refresh_tokens WHERE token_hash = $1' + 
+    //                     'AND expires_at > now() RETURNING user_id',
+    //     [hash(token)]
+    // );
+
+    const result = await query(
+        `SELECT *
+        FROM refresh_tokens
+        WHERE token_hash = $1
+            AND expires_at > now()`,
+        [hash(token)]
+    );
+    if (result.rows.length === 0) {
+        res.clearCookie('refreshToken', { path: cookieOpts.path });
+        return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    // has valid refresh token
+    const userId = result.rows[0].user_id;
+    const user = await query('SELECT user_id, username FROM users WHERE user_id = $1', [userId]);
+    res.json({ token: signAccess(userId), user: user.rows[0] });
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+    const token = req.cookies.refreshToken;
+    if (token) await query('DELETE FROM refresh_tokens WHERE token_hash = $1', [hash(token)]);
+    res.clearCookie('refreshToken', { path: cookieOpts.path });
+    res.status(204).send();
+});
+
 app.post('/api/signup', async (req, res) => {
     const content = req.body;
-    console.log(content)
     if (content.username === undefined || 
         content.password === undefined){
             res.status(400).json({"error":`invalid request parameters: ${content}`});
@@ -120,26 +204,25 @@ app.post('/api/signup', async (req, res) => {
 
 app.get('/api/me', async (req, res) => {
     const verifiedData = await parseToken(req.headers);
-    if (verifiedData !== undefined && verifiedData.user_id !== undefined) {
+    if (verifiedData !== undefined && verifiedData.userId !== undefined) {
         const usernameQuery = "SELECT username FROM users WHERE user_id = $1";
         const usernameRow = await query(usernameQuery, [verifiedData.user_id]);
         if (usernameRow !== undefined) {
             const username = usernameRow.rows[0].username
-            res.status(200).json({"response": `username: ${username}`});
+            return res.status(200).json({"response": `username: ${username}`});
         } else {
-            res.status(200).json({"response": "invalid token"});
+            return res.status(401).json({"response": "invalid token"});
         }
     } else {
-        res.status(200).json({"response": "not logged in"});
+        return res.status(401).json({"response": "not logged in"});
     }
 });
 
 const parseToken = async (headers) => {
     const authHeader = headers.authorization;
     const authorizationToken = authHeader?.split(' ')[1];
-    console.log(headers)
     try {
-        const verifiedData = await jwt.verify(authorizationToken, process.env.JWT_SECRET);
+        const verifiedData = jwt.verify(authorizationToken, process.env.JWT_SECRET);
         return verifiedData;
     } catch (err) {
         return undefined;
@@ -161,11 +244,11 @@ const checkUserExists = async (username) => {
     return existsResult.rows.length !== 0;
 }
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
     const content = req.body;
     if (content.username === undefined || 
         content.password === undefined){
-            res.status(400).json({"error":"invalid request parameters"});
+            return res.status(400).json({"error":"invalid request parameters"});
     }
     
     const exists = "SELECT * FROM users WHERE username = $1";
@@ -175,8 +258,7 @@ app.post('/api/login', async (req, res) => {
         const isCorrect = await argon2.verify(hash, content.password);
         const user_id = existsResult.rows[0].user_id;
         if (isCorrect) {
-            // const JWT_SECRET = crypto.randomBytes(32).toString('hex');
-            // console.log(typeof JWT_SECRET) 
+            await issueRefreshToken(res, user_id);
             const token = jwt.sign({ user_id: user_id }, process.env.JWT_SECRET, { expiresIn: '1d' });
             return res.status(200).json({"response": `${content.username} ${token}`});
         }

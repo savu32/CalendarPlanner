@@ -1,6 +1,9 @@
 import { useState } from "react"
+import { useAuth } from "./AuthProvider";
 
 export function SignUpView() {
+
+    const { signup } = useAuth()
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -14,8 +17,10 @@ export function SignUpView() {
     };
 
     const sendSignUpRequest = (e) => {
-        setUsername("")
-        setPassword("")
+        signup(username, password);
+
+        setUsername("");
+        setPassword("");
     }
 
     return (

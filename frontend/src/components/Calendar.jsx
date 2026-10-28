@@ -62,7 +62,10 @@ export function Calendar() {
         <>
             <div style = {{display:"flex", flexDirection:"column", gap:"2px"}}>
                 <div style = {{display : "flex", flexDirection:"row", alignItems:"center", gap : "10px", padding:"5px"}}>
-                    <button disabled = {true} style={{ visibility: "hidden", justifySelf:"flex-start", alignSelf:"center"}}>Log in</button>
+                    { username === null ? 
+                        <button disabled = {true} style={{ visibility: "hidden", justifySelf:"flex-start", alignSelf:"center"}}>Log in</button>
+                        : 
+                        <button onClick={logout} style={{justifySelf:"flex-start", alignSelf:"center"}}>Log out</button> }
                     <button onClick={reduceMonth} style={{backgroundColor : "black", marginLeft:"auto", borderWidth:"0"}}>{"<"}</button>
                     <h2 style={{width : "160px",  alignSelf:"center"}}>{months[monthId-1]} {yearNum}</h2>
                     <button onClick={increaseMonth} style={{backgroundColor : "black", marginRight:"auto", borderWidth:"0"}}>{">"}</button>

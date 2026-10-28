@@ -68,8 +68,22 @@ export function AuthProvider({ children }) {
         token.current = resultResponse[1];
     }
 
+    const signup = async (username, password) => {
+        const url = "http://localhost:3001/api/auth/signup"
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ "username": username, "password": password }),
+        });
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const result = await response.json();
+        return result;
+    }
+
     const logout = async () => {
-        await fetch('/api/auth/logout', { 
+        await fetch('http://localhost:3001/api/auth/logout', { 
             method: 'POST', credentials: 'include' 
         });
         setUsername(null);
@@ -100,7 +114,7 @@ export function AuthProvider({ children }) {
     }, [refresh]);
 
     return (
-        <AuthContext.Provider value={{ username, loading, login, logout, apiFetch }}>
+        <AuthContext.Provider value={{ username, loading, login, logout, signup, apiFetch }}>
         {children}
         </AuthContext.Provider>
     );

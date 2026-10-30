@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 // import styles from '../styles/textbox.module.css';
 
-export const Textbox = ({year, month, day}) => {
+export const Textbox = ({year, month, day, update}) => {
 
     const { apiFetch } = useAuth();
     const [textField, handleChange] = useState("");
@@ -21,7 +21,7 @@ export const Textbox = ({year, month, day}) => {
         };
         const result = await apiFetch(url, options);
         console.log(await result.json())
-
+        update();
         handleChange("");
     }
 

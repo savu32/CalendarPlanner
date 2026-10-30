@@ -73,4 +73,36 @@ router.post('/create', async (req, res) => {
                                     content.day, content.note, res);
 });
 
+router.post('/delete', async (req, res) => {
+    const verifiedData = await parseToken(req.headers);
+    if (verifiedData === undefined || verifiedData.userId === undefined) {
+        return res.status(401).json({"error": "token expired"});
+    }
+    const user_id = verifiedData.userId;
+
+    const content = req.body;
+    if (user_id === undefined ||
+        content.note_id === undefined){
+            return res.status(400).json({"error":"invalid request parameters"});
+    }
+
+    console.log(user_id, content.note_id)
+    
+    const deleteNote = async (user_id, note_id, res) => {
+        const deleteCmd = `DELETE 
+                        FROM notes 
+                        WHERE user_id = $1 AND note_id = $2
+                        RETURNING *`;
+
+        try {
+            const deleteResult = await query(deleteCmd, [user_id, note_id]);
+            return res.status(200).json({"response": `note deleted`});
+        } catch (err) {
+            return res.status(400).json({"error": `note delete failed ${err}`});
+        }
+    }
+
+    return await deleteNote(user_id, content.note_id, res);
+});
+
 export default router;

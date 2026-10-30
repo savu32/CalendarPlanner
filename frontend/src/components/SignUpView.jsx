@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "./AuthProvider";
 
 export function SignUpView() {
@@ -6,7 +7,8 @@ export function SignUpView() {
     const { signup } = useAuth()
 
     const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const [password, setPassword] = useState("");    
+    const navigate = useNavigate();
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -23,6 +25,10 @@ export function SignUpView() {
         setPassword("");
     }
 
+    const goBack = () => {
+        navigate(`/calendar/login`);
+    }
+
     return (
         <>
             <div style = {{display : "flex", 
@@ -34,6 +40,9 @@ export function SignUpView() {
                             textAlign:"center",
                             gap:"10px"
                             }}>
+                <button onClick={() => goBack()}>
+                    <p>Return</p>
+                </button>
                 <div style={{margin:"0 auto"}}>
                     <input
                         type="text"

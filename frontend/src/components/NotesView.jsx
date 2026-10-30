@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
 import { Note } from './Note';
-export function NotesView({notesText}) {
+export function NotesView({notes, update}) {
 
     return (
         <>
             <div>
                 <div style = {{display : "flex", flexDirection:"column", justifyContent : "center", paddingLeft:"5px", paddingBottom : "20px"}}>
-                    {notesText.map((note, i) => <Note key = {note.id} noteText={note.content}/>)}
+                    {notes.map(note => <Note key = {note.note_id} note={note} update={update}/>)}
                 </div>
             </div>
         </>

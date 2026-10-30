@@ -34,24 +34,6 @@ export function DateView() {
 
     }, [])
 
-    const createNote = async () => {
-        const url = "http://localhost:3001/api/notes/create";
-        const options = {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    "year": year,
-                    "month": month,
-                    "day": day,
-                    "note": textField
-                })
-        };
-        const result = await apiFetch(url, options);
-        console.log(await result.json())
-
-        handleChange("");
-    }
-
     const getNotes = async () => {
         const url = `http://localhost:3001/api/notes/list?year=${year}&month=${month}&day=${day}`;
         const options = {
@@ -61,25 +43,7 @@ export function DateView() {
         const result = await apiFetch(url, options);
         const notesList = await result.json();
         const allNotes = JSON.parse(notesList["response"]);
-        console.log(allNotes);
         updateNotes(allNotes);
-        // try {
-        //     const response = await fetch(url, {
-        //         method: "GET",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //             // "headers": { Authorization: `Bearer ${token}` }
-        //         },
-        //     });
-        //     if (!response.ok) {
-        //         throw new Error(`Response status: ${response.status}`);
-        //     }
-
-        //     const result = await response.json();
-        //     updateNotes(result);
-        // } catch (error) {
-        //     console.error(error.message);
-        // }
     }
 
     const formatDay = (day) => {
@@ -109,8 +73,8 @@ export function DateView() {
                     <div style={{visibility: "hidden", marginLeft: "10px"}}><p>Return</p></div>
                 </div>
                 <div style={{display:"flex", flexDirection:"column", gap:"30px"}}>
-                    <Textbox year={yearNum} month={monthId} day={dayNum}/>
-                    <NotesView notesText={notes}/>
+                    <Textbox year={yearNum} month={monthId} day={dayNum} update={getNotes}/>
+                    <NotesView notes={notes} update={getNotes}/>
                 </div>
             </div>
         </>

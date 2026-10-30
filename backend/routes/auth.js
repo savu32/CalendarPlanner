@@ -54,41 +54,40 @@ router.post('/refresh', async (req, res) => {
         return res.status(401).json({ error: 'No refresh token' });
     } 
 
-    // cycle token only if last used more than 10 seconds ago to handle re-mounts
-    const deleteResult = await query(
-        `DELETE FROM refresh_tokens WHERE token_hash = $1
-                        AND expires_at > now() 
-                        AND (used_at IS NOT NULL AND now() > used_at + interval '5 seconds') 
-                        RETURNING user_id`,
+    // do not cycle tokens used within 5 seconds to handle duplicate refreshes on re-mounts
+    const recently_used = await query(
+        `UPDATE refresh_tokens
+        SET used_at = COALESCE(used_at, now())
+        WHERE token_hash = $1
+            AND expires_at > now()
+            AND (used_at IS NULL OR now() < used_at + interval '5 seconds') 
+        RETURNING user_id, expires_at`,
         [hash(token)]
     );
-    if (deleteResult.rows.length !== 0) {
-        const userId = deleteResult.rows[0].user_id;  
-        console.log('cycling token', userId)
-        await issueRefreshToken(res, userId);
+    if (recently_used.rows.length !== 0) {
+        const userId = recently_used.rows[0].user_id;
         const user = await query('SELECT user_id, username FROM users WHERE user_id = $1', [userId]);
         res.json({ token: signAccess(userId), user: user.rows[0] });
         return res;
     }
 
-    const result = await query(
-        `UPDATE refresh_tokens
-        SET used_at = COALESCE(used_at, now())
+    const to_refresh = await query(
+        `SELECT *
+        FROM refresh_tokens
         WHERE token_hash = $1
             AND expires_at > now()
-        RETURNING user_id, expires_at`,
+            AND (used_at IS NOT NULL AND now() > used_at + interval '5 seconds')`,
         [hash(token)]
     );
-    if (result.rows.length === 0) {
-        console.log('no token found 9')
+    if (to_refresh.rows.length === 0) {
         res.clearCookie('refreshToken', { path: cookieOpts.path });
         return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
     // has valid refresh token
-    console.log('valid token 9')
-    const userId = result.rows[0].user_id;
+    const userId = to_refresh.rows[0].user_id;
     const user = await query('SELECT user_id, username FROM users WHERE user_id = $1', [userId]);
+    await issueRefreshToken(res, userId)
     res.json({ token: signAccess(userId), user: user.rows[0] });
 });
 
@@ -151,5 +150,21 @@ const checkUserExists = async (username) => {
 
     return existsResult.rows.length !== 0;
 }
+
+router.get('/me', async (req, res) => {
+    const verifiedData = await parseToken(req.headers);
+    if (verifiedData !== undefined && verifiedData.userId !== undefined) {
+        const usernameQuery = "SELECT username FROM users WHERE user_id = $1";
+        const usernameRow = await query(usernameQuery, [verifiedData.user_id]);
+        if (usernameRow !== undefined) {
+            const username = usernameRow.rows[0].username
+            return res.status(200).json({"response": `username: ${username}`});
+        } else {
+            return res.status(401).json({"response": "invalid token"});
+        }
+    } else {
+        return res.status(401).json({"response": "not logged in"});
+    }
+});
 
 export default router;

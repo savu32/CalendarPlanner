@@ -1,16 +1,25 @@
-# React + Vite
+React frontend for the CalendarPlanner webapp. Uses ReactRouter to manage browser routes.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+startup with:
+'''npm run dev'''
 
-Currently, two official plugins are available:
+Routes:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+"/calendar/:year/:month" -> calendar month view:
+Working homepage for the app. Allows users to increment/decrement month, log in, log out, and select a date.
 
-## React Compiler
+"/calendar/:year/:month/:day" -> date view:
+Contains an input field and previously submitted notes for that date. Each note displayed contains a delete button. New listNotes call is made from the page whenever note is created or deleted or page is refreshed.
+To-do: caching, pagination, paginated queries
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+"/calendar/login" -> login page:
+Contains return button, username/password fields, and signup button. 
+To-do: notification banner
 
-## Expanding the ESLint configuration
+"/calendar/signup" -> signup page:
+Contains return button and username/password fields. 
+To-do: notification banner
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+AuthN/AuthZ:
+
+Managed by AuthProvider which makes all calls to backend. RefreshToken cookie received and stored by browser on login. JWT AccessToken stored by AuthProvider. /refresh called after page reload or 401 response which cycles RefreshToken and provide new AccessToken. 

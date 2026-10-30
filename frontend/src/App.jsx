@@ -13,6 +13,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to={`/calendar/`}/>} />
         <Route path="/calendar/" element={<Navigate to={`/calendar/${today.getFullYear()}/${today.getMonth()+1}`}/>} />
         <Route path="/calendar/:year/:month?/" element={<Calendar />} />
         <Route path="/calendar/:year/:month/:day" element={<DateView />} />

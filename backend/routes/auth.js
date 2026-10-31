@@ -4,7 +4,7 @@ const router = express.Router();
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { query } from '../db.js';
+import { query } from '../utils/db.js';
 
 const REFRESH_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -137,14 +137,6 @@ router.post('/signup', async (req, res) => {
 });
 
 const checkUserExists = async (username) => {
-    const create = "CREATE TABLE IF NOT EXISTS users ( \
-                        user_id SERIAL PRIMARY KEY, \
-                        username VARCHAR(40) UNIQUE NOT NULL, \
-                        password VARCHAR(120) NOT NULL, \
-                        created_at DATE NOT NULL \
-                    )"
-    const createResult = await query(create, [])
-
     const exists = "SELECT * FROM users WHERE username = $1";
     const existsResult = await query(exists, [username]);
 

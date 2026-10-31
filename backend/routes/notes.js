@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 
 import parseToken from '../utils/parseToken.js';
-import { query } from '../db.js';
+import { query } from '../utils/db.js';
 
 router.get('/list', async (req, res) => {
     const verifiedData = await parseToken(req.headers);

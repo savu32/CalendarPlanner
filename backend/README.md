@@ -49,3 +49,10 @@ AuthN:
     Refresh tokens valid for 7 days. Cycled on refresh if last used more than 5 seconds ago. Resolved issue of re-mount which triggered back-to-back refresh calls. 
 
     To-do: implement process to clean cycled out refresh_tokens
+
+PostGreSQL migrations:
+
+npm run migrate:create create-notes     # creates migration
+npm run migrate up                      # apply all pending migrations
+npm run migrate down                    # roll back the most recent migration
+npm run migrate redo                    # roll back, then roll up
